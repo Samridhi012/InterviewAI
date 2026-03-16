@@ -1,0 +1,7 @@
+PACKAGES
+express - creates server
+dotenv  - protecting sensitive data
+mongoose
+bcryptjs - for hashing
+jsonwebtoken - creates jwt tokens
+cookie-parser  - sets token into cookie and reading it from cookie
