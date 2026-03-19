@@ -1,6 +1,7 @@
 const userModel = require('../models/user.model');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const tokenBlacklistModel = require('../models/blacklist.model');
 
 //jsDOC comments - for documentation and better code readability. 
 // It provides information about the function, its parameters, return type, and other relevant details.
@@ -45,8 +46,10 @@ async function registerUserController(req, res) {
     );
 
     res.cookie("token", token) // Set the JWT token in a cookie for authentication purposes
+
+    // Logs the cookie header to verify that the cookie is being set correctly
+    // console.log('Cookie set:', res.get('Set-Cookie'));  
     
-    console.log('Cookie set:', res.get('Set-Cookie'));  // Logs the cookie header to verify that the cookie is being set correctly
     
     res.status(201).json({
         message: "User registered successfully",
@@ -97,7 +100,57 @@ async function loginUserController(req, res) {
     });
 }
 
+/**
+ * @name logoutUserController
+ * @route GET/api/auth/logout
+ * @description clear token from cookie and blacklist it
+ * @access Public
+ */
+
+async function logoutUserController(req, res) {
+    const token = req.cookies.token; // Extract the token from the cookies
+
+    if (token) {
+        // Add the token to the blacklist
+        await tokenBlacklistModel.create({ token });    
+    }
+    // Clear the token from the cookie
+    res.clearCookie("token");
+
+    res.status(200).json({
+        message: "User logged out successfully"
+    });
+}
+
+/**
+ * @name getMeController
+ * @route GET/api/auth/get-me
+ * @description get the current logged-in user details
+ * @access Private
+ */
+
+async function getMeController(req, res) {
+    const user = await userModel.findById(req.user.id);  //req.user is set in the auth middleware after verifying the token. It contains the decoded user information from the token, including the user's ID.
+
+    if (!user) {
+        return res.status(404).json({
+            message: "User not found."
+        });
+    }
+
+    res.status(200).json({
+        message: "User details fetched successfully",
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email
+        }
+    });
+}
+
 module.exports = {
     registerUserController,
-    loginUserController
+    loginUserController,
+    logoutUserController,
+    getMeController
 }
