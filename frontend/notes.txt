@@ -1,0 +1,5 @@
+npm create vite@latest .
+
+PACKAGES
+sass
+react-router : helps in navigating through components [eg, what will be visible in '/login']
