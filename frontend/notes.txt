@@ -1,5 +1,24 @@
 npm create vite@latest .
 
-PACKAGES
+rafce - react arrow function export component 
+
+-----------PACKAGES---------------------
 sass
 react-router : helps in navigating through components [eg, what will be visible in '/login']
+axios : helps frontend to communicate to backend
+
+-----------4 LAYER ARCHITECTURE--------------
+UI LAYER: what user will see & how user is navigating between pages
+=>components
+=>pages
+
+HOOK LAYER: for managing State and API Layers
+=>hooks
+
+STATE LAYER: manages data state [stores data]
+=>auth.context.jsx
+=>ai.context.jsx
+
+API LAYER: how frontend will communicate with backend
+=>services
+    =>auth.api.js

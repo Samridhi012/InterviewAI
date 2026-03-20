@@ -1,0 +1,12 @@
+.button{
+    border: none;
+    outline: none;
+    padding-inline: 1.5rem;  //horizontal- left and right
+    padding-block: 0.75rem;  //vertical- top and bottom
+    border-radius: 1rem;
+    
+    &.primary-button{
+        background-color: #e1034d;
+        color: #fff;
+    }
+}
