@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const Login = () => {
     const { loading, handleLogin } = useAuth();
+    const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -15,6 +16,7 @@ const Login = () => {
     const handleSubmit = async(e) => { 
         e.preventDefault()
         await handleLogin({ email, password });
+        navigate("/"); //after successful login, we navigate to the home page ("/") using the useNavigate hook from react-router.
     }
 
     if(loading){

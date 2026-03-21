@@ -9,7 +9,7 @@
 //"useAuth.jsx" is the HOOK LAYER that connects the STATE LAYER and API LAYER. 
 // It allows us to access the authentication state and functions from the AuthContext in any component that calls useAuth.
 
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "../auth.context";
 import { register, login, logout, getMe } from "../services/auth.api";
 
@@ -63,6 +63,22 @@ export const useAuth = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const getAndSetUser = async () => {
+            try{
+                const data = await getMe(); //getMe is an API call that fetches the current authenticated user's information from the backend.
+                setUser(data.user); //if the user is authenticated, we update the user state with the fetched user data.
+            }catch(error){
+                console.error("Failed to fetch user:", error);
+            }
+            finally{
+                setLoading(false); //after the API call is completed (regardless of success or failure), we set loading to false to indicate that the authentication status has been determined. This allows us to render the appropriate UI based on whether the user is authenticated or not.
+            }
+        };
+
+        getAndSetUser();
+    }, []); //empty dependency array means this effect will only run once when the component mounts. This is important because we only want to check the user's authentication status once when the app loads, rather than on every render.
 
     return {user, setUser, loading, setLoading, handleLogin, handleRegister, handleLogout}; //hook returns all this
 }
