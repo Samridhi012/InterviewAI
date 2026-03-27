@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 /**
  * -job description schema   :String
  * -resume text    :String
