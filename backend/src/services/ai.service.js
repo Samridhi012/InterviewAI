@@ -2,7 +2,7 @@
 const {GoogleGenAI} = require("@google/genai");
 const {z} = require("zod");
 const {zodToJsonSchema} = require("zod-to-json-schema");
-const {resume, selfdescribe, jobdescribe} = require("./temp");
+const {resume, selfDescription, jobDescription} = require("./temp");
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
@@ -34,31 +34,77 @@ const interviewReportSchema = z.object({
     preparationPlan : z.array(z.object({
         day: z.number().describe("The day number in the preparation plan, starting from 1"), 
         focus: z.string().describe("The main focus of the preparation for that day, e.g. technical questions, behavioural questions, etc."),
-        tasks: z.array(z.string()).describe("The specific tasks to be done on that day to prepare for the interview, e.g. practice coding questions, mock interviews, etc.")
+        tasks: z.array(z.string()).describe("The specific tasks to be done on that day to prepare for the interview, e.g. concepts to be learnt, practice coding questions, mock interviews, etc.")
     })).describe("A day-wise preparation plan for the candidate to prepare for the interview, including the focus and specific tasks for each day")
 
 }).describe("The interview report containing technical questions, behavioural questions, skill gaps and preparation plan for the candidate based on the resume, self describe and job describe");
 
 
-async function generateInterviewReport({resume, selfdescribe, jobdescribe}){
-    const prompt = `Generate an interview report for a candidate based on the following information:
-        Resume: ${resume}
-        Self describe: ${selfdescribe}
-        Job describe: ${jobdescribe}
+async function generateInterviewReport({resume, selfDescription, jobDescription}){
+    const prompt = `
+
+    Generate an interview report for a candidate based on:
+    Resume: ${resume}
+    Self description: ${selfDescription}
+    Job description: ${jobDescription}
+
+    Return output in JSON format with this EXACT structure:
+    {
+        "matchScore": <number 0-100>,
+        "technicalQuestions": [
+            {"question": "...", "intension": "...", "answer": "..."},
+            ...
+        ],
+        "behaviouralQuestions": [
+            {"question": "...", "intension": "...", "answer": "..."},
+            ...
+        ],
+        "skillGaps": [
+            {"skill": "...", "severity": "low|medium|high"},
+            ...
+        ],
+        "preparationPlan": [
+            {
+                "day": 1, 
+                "focus": "...", 
+                "tasks": [
+                    "...", 
+                    "..."
+                ]   
+            },
+            ...
+        ]
+    }
+
+    Please ensure to: 
+    - Include 3-5 technical questions with detailed answers
+    - Include 2-4 behavioral questions with detailed answers
+    - Include a 4 or 5-day preparation plan with specific tasks for EACH day
+    - tasks array MUST contain actual task description strings defining what the candidate needs to do, not empty or placeholders
     `;
     
+    
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config : {
+        model: "gemini-3-flash-preview",
+        contents: [{
+            role: "user",
+            parts: [{text: prompt}]
+        }],
+        generationConfig: {
             responseMimeType: "application/json",
-            responseJsonSchema: zodToJsonSchema(interviewReportSchema),
+            responseSchema: zodToJsonSchema(interviewReportSchema),
         },
     });
+        
+    // Extract JSON from markdown-wrapped response
+    const jsonStart = response.text.indexOf('{');
+    const jsonEnd = response.text.lastIndexOf('}');
+    const jsonString = response.text.substring(jsonStart, jsonEnd + 1);
     
-    return JSON.parse(response.text);
+    const report = interviewReportSchema.parse(JSON.parse(jsonString));
+    return report;
 
-};
+}
 
 //to check if the API is working fine
 //NOTE: Structured output is required, so choose a model that way.
