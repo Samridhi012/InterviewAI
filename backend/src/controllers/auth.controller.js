@@ -63,41 +63,103 @@ async function registerUserController(req, res) {
  * @access Public
  */
 
+// async function loginUserController(req, res) {
+//     // Inside your auth.controller.js
+//     console.log("--- DEBUGGING LOGIN ---");
+//     console.log("Raw Body:", req.body); 
+//     console.log("Content-Type Header:", req.headers['content-type']);
+
+//     const {email, password} = req.body;
+
+//     const user = await userModel.findOne({email});
+
+//     if(!user) {
+//         return res.status(400).json({
+//             message: "Please provide email and password."
+//         });
+//     }
+
+//     const isPasswordValid = await bcrypt.compare(password, user.password); // Compare the provided password with the hashed password stored in the database
+
+//     if (!isPasswordValid) { 
+//         return res.status(400).json({
+//             message: "Invalid email or password."
+//         });
+//     }
+
+//     const token = jwt.sign(
+//         {id: user._id, username: user.username}, 
+//         process.env.JWT_SECRET, 
+//         {expiresIn: "1d"}
+//     );
+
+//     res.cookie("token", token);
+
+//     res.status(200).json({
+//         message: "User logged in successfully",
+//         user: {
+//             id: user._id,
+//             username: user.username,
+//             email: user.email
+//         }
+//     });
+// }
+
 async function loginUserController(req, res) {
-    const {email, password} = req.body;
+    try {
+        // console.log("--- DEBUGGING LOGIN ---");
+        const { email, password } = req.body;
 
-    const user = await userModel.findOne({email});
-
-    if(!user) {
-        return res.status(400).json({
-            message: "Please provide email and password."
-        });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password); // Compare the provided password with the hashed password stored in the database
-
-    if (!isPasswordValid) { 
-        return res.status(400).json({
-            message: "Invalid email or password."
-        });
-    }
-
-    const token = jwt.sign(
-        {id: user._id, username: user.username}, 
-        process.env.JWT_SECRET, 
-        {expiresIn: "1d"}
-    );
-
-    res.cookie("token", token);
-
-    res.status(200).json({
-        message: "User logged in successfully",
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email
+        // 1. Validate inputs were actually sent
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Please provide both email and password inputs."
+            });
         }
-    });
+
+        // 2. Find user in DB
+        const user = await userModel.findOne({ email: email.trim() }); // .trim() removes accidental spacing
+
+        // 3. Check if user exists
+        if (!user) {
+            return res.status(404).json({
+                message: "User account not found with that email."
+            });
+        }
+
+        // 4. Validate password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) { 
+            return res.status(400).json({
+                message: "Invalid email or password."
+            });
+        }
+
+        // 5. Generate token
+        const token = jwt.sign(
+            { id: user._id, username: user.username }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: "1d" }
+        );
+
+        res.cookie("token", token, {
+            httpOnly: true, // Security best practice
+            secure: process.env.NODE_ENV === "production"
+        });
+
+        return res.status(200).json({
+            message: "User logged in successfully",
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error("Login controller crash:", error);
+        return res.status(500).json({ message: "Internal server error during login." });
+    }
 }
 
 /**

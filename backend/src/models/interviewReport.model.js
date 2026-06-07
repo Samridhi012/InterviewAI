@@ -38,9 +38,9 @@ const technicalQuestionSchema = new mongoose.Schema({
         type: String,
         required: [true, "Technical question is required"]
     },
-    intension: {
+    intention: {
         type: String,
-        required: [true, "Intension is required"]
+        required: [true, "Intention is required"]
     },
     answer: {
         type: String,
@@ -55,9 +55,9 @@ const behaviouralQuestionSchema = new mongoose.Schema({
         type: String,
         required: [true, "Behavioural question is required"]
     },
-    intension: {
+    intention: {
         type: String,
-        required: [true, "Intension is required"]
+        required: [true, "Intention is required"]
     },
     answer: {
         type: String,
@@ -121,6 +121,10 @@ const interviewReportSchema = new mongoose.Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "users"
+    },
+    title:{
+        type: String,
+        required: [true, "Job title is required"]
     }
 },{
     timestamps: true //to automatically add createdAt and updatedAt fields to the schema

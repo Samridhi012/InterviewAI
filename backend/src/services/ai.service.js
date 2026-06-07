@@ -2,7 +2,7 @@
 const {GoogleGenAI} = require("@google/genai");
 const {z} = require("zod");
 const {zodToJsonSchema} = require("zod-to-json-schema");
-const {resume, selfDescription, jobDescription} = require("./temp");
+// const {resume, selfDescription, jobDescription} = require("./temp"); 
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
@@ -16,13 +16,13 @@ const interviewReportSchema = z.object({
 
     technicalQuestions : z.array(z.object({
         question: z.string().describe("The technical question asked during the interview"),
-        intension: z.string().describe("The intension of interviewer behind asking this question"),
+        intention: z.string().describe("The intention of interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take, etc.")
     })).describe("Technical questions that are likely to be asked in the interview along with the intension of interviewer and how to answer them"),
 
     behaviouralQuestions : z.array(z.object({
         question: z.string().describe("The behavioural question asked during the interview"),
-        intension: z.string().describe("The intension of interviewer behind asking this question"),
+        intention: z.string().describe("The intention of interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take, etc.")
     })).describe("Behavioural questions that are likely to be asked in the interview along with the intension of interviewer and how to answer them"),
 
@@ -35,7 +35,9 @@ const interviewReportSchema = z.object({
         day: z.number().describe("The day number in the preparation plan, starting from 1"), 
         focus: z.string().describe("The main focus of the preparation for that day, e.g. technical questions, behavioural questions, etc."),
         tasks: z.array(z.string()).describe("The specific tasks to be done on that day to prepare for the interview, e.g. concepts to be learnt, practice coding questions, mock interviews, etc.")
-    })).describe("A day-wise preparation plan for the candidate to prepare for the interview, including the focus and specific tasks for each day")
+    })).describe("A day-wise preparation plan for the candidate to prepare for the interview, including the focus and specific tasks for each day"),
+
+    title : z.string().describe("The title of the job for which the interview report is generated.")
 
 }).describe("The interview report containing technical questions, behavioural questions, skill gaps and preparation plan for the candidate based on the resume, self describe and job describe");
 
@@ -50,13 +52,14 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
 
     Return output in JSON format with this EXACT structure:
     {
+        "title": "<The job profile/title extracted from the Job Description>",
         "matchScore": <number 0-100>,
         "technicalQuestions": [
-            {"question": "...", "intension": "...", "answer": "..."},
+            {"question": "...", "intention": "...", "answer": "..."},
             ...
         ],
         "behaviouralQuestions": [
-            {"question": "...", "intension": "...", "answer": "..."},
+            {"question": "...", "intention": "...", "answer": "..."},
             ...
         ],
         "skillGaps": [
@@ -101,6 +104,10 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
     const jsonEnd = response.text.lastIndexOf('}');
     const jsonString = response.text.substring(jsonStart, jsonEnd + 1);
     
+    // console.log("=== RAW AI JSON STRING ===");
+    // console.log(jsonString);
+    // console.log("==========================");
+
     const report = interviewReportSchema.parse(JSON.parse(jsonString));
     return report;
 
