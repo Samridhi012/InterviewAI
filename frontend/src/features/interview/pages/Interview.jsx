@@ -131,10 +131,14 @@ const Interview = () => {
                         <section>
                             <div className='content-header'>
                                 <h2>Behavioral Questions</h2>
-                                <span className='content-header__count'>{(report.behavioralQuestions || []).length} questions</span>
+                                {/* Add a fallback check for both spellings using the || operator */}
+                                <span className='content-header__count'>
+                                    {((report.behaviouralQuestions || report.behavioralQuestions) || []).length} questions
+                                </span>
                             </div>
                             <div className='q-list'>
-                                {(report.behavioralQuestions || []).map((q, i) => (
+                                {/* Add the same double-spelling fallback check here before mapping */}
+                                {((report.behaviouralQuestions || report.behavioralQuestions) || []).map((q, i) => (
                                     <QuestionCard key={i} item={q} index={i} />
                                 ))}
                             </div>
